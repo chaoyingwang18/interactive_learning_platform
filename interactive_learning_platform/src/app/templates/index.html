@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <div class="p-5 mb-4 bg-light rounded-3">
+        <div class="container-fluid py-5">
+            <h1 class="display-5 fw-bold">歡迎使用互動學習平台</h1>
+            <p class="col-md-8 fs-4">本平台專為香港高校教師設計，旨在幫助您輕鬆創建、管理和交付多種互動學習活動，並通過 GenAI 提升教學效率。</p>
+            {% if current_user.is_anonymous %}
+            <p>
+                <a class="btn btn-primary btn-lg" href="{{ url_for('main.login') }}" role="button">立即登入</a>
+                <a class="btn btn-secondary btn-lg" href="{{ url_for('main.register') }}" role="button">新用戶註冊</a>
+            </p>
+            {% else %}
+            <p>
+                {% if current_user.role == 'lecturer' %}
+                <a class="btn btn-primary btn-lg" href="{{ url_for('main.lecturer_dashboard') }}" role="button">進入教師儀表板</a>
+                {% elif current_user.role == 'student' %}
+                <a class="btn btn-primary btn-lg" href="{{ url_for('main.student_dashboard') }}" role="button">進入學生儀表板</a>
+                {% elif current_user.role == 'admin' %}
+                <a class="btn btn-primary btn-lg" href="{{ url_for('main.admin_dashboard') }}" role="button">進入管理員儀表板</a>
+                {% endif %}
+            </p>
+            {% endif %}
+        </div>
+    </div>
+    
+    <div class="row align-items-md-stretch">
+        <div class="col-md-6">
+            <div class="h-100 p-5 text-white bg-dark rounded-3">
+                <h2>教師功能</h2>
+                <p>創建投票、測驗、詞雲等互動活動，管理課程和學生，並使用 GenAI 輔助生成活動內容。</p>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="h-100 p-5 bg-light border rounded-3">
+                <h2>學生功能</h2>
+                <p>實時參與課堂活動，查看個人活動報告和排行榜，提升學習參與度。</p>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+

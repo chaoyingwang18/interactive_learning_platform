@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>{{ course.code }} - {{ course.name }}</h1>
+        <a href="{{ url_for('main.student_dashboard') }}" class="btn btn-secondary">返回仪表板</a>
+    </div>
+
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h3>课程活动</h3>
+                    <p class="mb-0"><small class="text-muted">教师: {{ course.lecturer.username }}</small></p>
+                </div>
+                <div class="card-body">
+                    {% if activities %}
+                        <div class="list-group">
+                            {% for activity in activities %}
+                            <div class="list-group-item">
+                                <div class="d-flex w-100 justify-content-between">
+                                    <h5 class="mb-1">{{ activity.title }}</h5>
+                                    <small class="text-muted">{{ activity.created_at.strftime('%Y-%m-%d %H:%M') }}</small>
+                                </div>
+                                <p class="mb-1">{{ activity.description }}</p>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <small class="text-muted">
+                                        类型: 
+                                        {% if activity.type == 'quiz' %}
+                                            <span class="badge badge-primary">测验</span>
+                                        {% elif activity.type == 'poll' %}
+                                            <span class="badge badge-info">投票调查</span>
+                                        {% elif activity.type == 'word_cloud' %}
+                                            <span class="badge badge-warning">词云</span>
+                                        {% elif activity.type == 'short_answer' %}
+                                            <span class="badge badge-success">简答</span>
+                                        {% elif activity.type == 'mini_game' %}
+                                            <span class="badge badge-danger">小游戏</span>
+                                        {% else %}
+                                            <span class="badge badge-secondary">{{ activity.type }}</span>
+                                        {% endif %}
+                                    </small>
+                                    <div>
+                                        {% if activity.type == 'quiz' %}
+                                            <a href="{{ url_for('main.student_quiz', activity_id=activity.id) }}" class="btn btn-sm btn-primary">开始测验</a>
+                                        {% elif activity.type == 'poll' %}
+                                            <a href="{{ url_for('main.student_activity_detail', activity_id=activity.id) }}" class="btn btn-sm btn-info">参与调查</a>
+                                        {% elif activity.type == 'word_cloud' %}
+                                            <a href="{{ url_for('main.student_activity_detail', activity_id=activity.id) }}" class="btn btn-sm btn-warning">查看词云</a>
+                                        {% elif activity.type == 'short_answer' %}
+                                            <a href="{{ url_for('main.student_activity_detail', activity_id=activity.id) }}" class="btn btn-sm btn-success">回答问题</a>
+                                        {% else %}
+                                            <a href="{{ url_for('main.student_activity_detail', activity_id=activity.id) }}" class="btn btn-sm btn-outline-primary">查看详情</a>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="alert alert-info" role="alert">
+                            <h4 class="alert-heading">暂无活动</h4>
+                            <p>这门课程暂时还没有任何活动。请稍后再来查看，或联系您的教师了解更多信息。</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

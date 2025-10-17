@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h1 class="mb-4">管理員儀表板</h1>
+    <div class="alert alert-warning" role="alert">
+        管理員功能正在開發中。
+    </div>
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card p-3 shadow-sm">
+                <h4 class="card-title">用戶管理</h4>
+                <p class="card-text">管理系統中的所有用戶（教師、學生、管理員）。</p>
+                <a href="{{ url_for('main.admin_users') }}" class="btn btn-outline-primary">進入</a>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card p-3 shadow-sm">
+                <h4 class="card-title">GenAI 任務日誌</h4>
+                <p class="card-text">監控和審核 GenAI 任務的執行情況。</p>
+                <a href="{{ url_for('main.admin_genai_tasks') }}" class="btn btn-outline-info">進入</a>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+

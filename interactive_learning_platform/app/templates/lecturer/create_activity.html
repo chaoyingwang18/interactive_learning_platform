@@ -1,0 +1,151 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h1 class="mb-4">為 {{ course.code }} 創建新活動</h1>
+    
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card p-3 shadow-sm mb-4">
+                <h4 class="card-title">GenAI 輔助生成</h4>
+                <p class="card-text">輸入教學內容或關鍵詞，讓 GenAI 為您生成活動草稿。</p>
+                <form id="genai-form">
+                    <div class="mb-3">
+                        <textarea class="form-control" id="genai-input" rows="4" placeholder="輸入教學主題、內容或網頁連結..." required></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-warning w-100">GenAI 生成草稿</button>
+                </form>
+                <div id="genai-message" class="mt-3"></div>
+            </div>
+        </div>
+
+        <div class="col-md-8">
+            <div class="card p-4 shadow">
+                <h4 class="card-title">手動創建活動</h4>
+                <form id="create-activity-form" action="{{ url_for('main.create_activity', course_id=course.id) }}" method="post">
+                    <div class="mb-3">
+                        <label for="title" class="form-label">活動標題</label>
+                        <input type="text" class="form-control" id="title" name="title" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="type" class="form-label">活動類型</label>
+                        <select class="form-select" id="type" name="type" required>
+                            <option value="">請選擇活動類型</option>
+                            <option value="poll">投票 (Poll)</option>
+                            <option value="quiz">測驗 (Quiz)</option>
+                            <option value="word_cloud">詞雲 (Word Cloud)</option>
+                            <option value="short_answer">簡答題 (Short Answer)</option>
+                            <option value="mini_game">小遊戲 (Mini-Game) - (待開發)</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Dynamic content based on activity type will be added here with JS -->
+                    <div id="activity-content-area" class="mb-3 border p-3 rounded">
+                        <p class="text-muted">選擇活動類型後，此處將出現相應的內容編輯器。</p>
+                    </div>
+
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{{ url_for('main.manage_activities', course_id=course.id) }}" class="btn btn-secondary me-md-2">取消</a>
+                        <button type="submit" class="btn btn-primary">創建活動</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.getElementById('genai-form').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const input = document.getElementById('genai-input').value;
+        const messageDiv = document.getElementById('genai-message');
+        const courseId = {{ course.id }};
+        const activityType = document.getElementById('type').value || 'quiz'; // Use selected type or default
+
+        if (!input) {
+            messageDiv.innerHTML = '<div class="alert alert-danger">請輸入教學主題或內容。</div>';
+            return;
+        }
+
+        messageDiv.innerHTML = '<div class="alert alert-warning">GenAI 正在生成草稿...</div>';
+        
+        fetch(`/api/genai/generate_activity/${courseId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                topic_or_content: input,
+                activity_type: activityType
+            }),
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                messageDiv.innerHTML = '<div class="alert alert-success">GenAI 草稿生成成功！請在右側編輯器中查看並修改。</div>';
+                const content = data.content;
+                
+                // Populate form fields with generated content
+                document.getElementById('title').value = content.title || 'GenAI 生成的活動';
+                document.getElementById('type').value = activityType;
+                
+                // Trigger change event to load dynamic content
+                document.getElementById('type').dispatchEvent(new Event('change')); 
+
+                // Populate dynamic content
+                setTimeout(() => {
+                    if (activityType === 'quiz') {
+                        document.getElementById('question').value = content.question || '';
+                        document.getElementById('options').value = (content.options || []).join('\\n');
+                        document.getElementById('correct_answer').value = content.correct_answer || '';
+                    } else if (activityType === 'short_answer') {
+                        document.getElementById('question').value = content.question || '';
+                    }
+                    // Add logic for other types here
+                }, 100);
+
+            } else {
+                messageDiv.innerHTML = `<div class="alert alert-danger">GenAI 生成失敗: ${data.error || '未知錯誤'}</div>`;
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            messageDiv.innerHTML = '<div class="alert alert-danger">發生網路錯誤。</div>';
+        });
+    });
+
+    document.getElementById('type').addEventListener('change', function() {
+        const type = this.value;
+        const contentArea = document.getElementById('activity-content-area');
+        contentArea.innerHTML = ''; // Clear previous content
+
+        let html = '';
+        if (type === 'poll' || type === 'quiz') {
+            html = `
+                <label for="question" class="form-label">問題</label>
+                <input type="text" class="form-control mb-3" id="question" name="question" required>
+                <label for="options" class="form-label">選項 (每行一個選項)</label>
+                <textarea class="form-control" id="options" name="options" rows="4" required></textarea>
+                ${type === 'quiz' ? '<div class="mt-3"><label for="correct_answer" class="form-label">正確答案 (輸入選項內容)</label><input type="text" class="form-control" id="correct_answer" name="correct_answer"></div>' : ''}
+            `;
+        } else if (type === 'word_cloud') {
+            html = `
+                <label for="prompt" class="form-label">詞雲提示 (提示學生輸入的內容)</label>
+                <input type="text" class="form-control" id="prompt" name="prompt" required>
+                <p class="text-muted mt-2">學生將輸入單個詞語或短語，系統將匯總生成詞雲。</p>
+            `;
+        } else if (type === 'short_answer') {
+            html = `
+                <label for="question" class="form-label">簡答題問題</label>
+                <textarea class="form-control" id="question" name="question" rows="4" required></textarea>
+                <p class="text-muted mt-2">學生的回答將由 GenAI 進行分組和分析。</p>
+            `;
+        } else if (type === 'mini_game') {
+            html = '<div class="alert alert-warning">小遊戲功能仍在開發中。</div>';
+        }
+        
+        contentArea.innerHTML = html;
+    });
+</script>
+{% endblock %}
+

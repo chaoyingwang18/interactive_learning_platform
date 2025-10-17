@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h1 class="mb-4">{{ title }}</h1>
+    <p>課程: {{ report_data.activity.course.code }} - {{ report_data.activity.course.name }}</p>
+    <p>活動類型: <span class="badge bg-primary">{{ report_data.activity.type }}</span></p>
+    <p>創建時間: {{ report_data.activity.created_at.strftime('%Y-%m-%d %H:%M') }}</p>
+    <p>總參與人數: {{ report_data.responses|length }}</p>
+    
+    <hr>
+    
+    {% if report_data.activity.type == 'short_answer' %}
+    <h2>簡答題分析 (GenAI 分組)</h2>
+    {% if report_data.grouping_result %}
+    <div class="row">
+        <div class="col-md-6">
+            <h4>分組統計</h4>
+            <ul class="list-group mb-4">
+                {% for group_label, indices in report_data.grouping_result.items() %}
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    {{ group_label }}
+                    <span class="badge bg-secondary rounded-pill">{{ indices|length }}</span>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+        <div class="col-md-6">
+            <h4>原始回答列表</h4>
+            <ul class="list-group">
+                {% for response in report_data.responses %}
+                <li class="list-group-item">
+                    <strong>{{ response.responder }}</strong>: {{ response.data.answer }} 
+                    {% if response.group_id %}
+                    <span class="badge bg-info ms-2">Group ID: {{ response.group_id }}</span>
+                    {% endif %}
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+    {% else %}
+    <div class="alert alert-warning">尚未對答案進行 GenAI 分組，或 GenAI 任務失敗。</div>
+    <form method="POST" action="{{ url_for('main.genai_group_answers', activity_id=report_data.activity.id) }}">
+        <button type="submit" class="btn btn-warning">立即進行 GenAI 分組</button>
+    </form>
+    {% endif %}
+    {% elif report_data.activity.type == 'quiz' %}
+    <h2>測驗結果分析</h2>
+    <p>問題: {{ report_data.content.question }}</p>
+    <!-- Detailed quiz results and correct/incorrect breakdown will be added later -->
+    {% else %}
+    <h2>原始回答列表</h2>
+    <ul class="list-group">
+        {% for response in report_data.responses %}
+        <li class="list-group-item">
+            <strong>{{ response.responder }}</strong>: {{ response.data }}
+        </li>
+        {% endfor %}
+    </ul>
+    {% endif %}
+    
+    <div class="mt-4">
+        <a href="{{ url_for('main.manage_activities', course_id=report_data.activity.course.id) }}" class="btn btn-secondary">返回活動管理</a>
+    </div>
+{% endblock %}
+

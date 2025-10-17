@@ -1,0 +1,167 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <div class="container-fluid">
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h1>{{ activity.title }}</h1>
+                        <p class="text-muted mb-0">
+                            课程: {{ activity.course.code }} - {{ activity.course.name }} | 
+                            教师: {{ activity.course.lecturer.username }}
+                        </p>
+                    </div>
+                    <a href="{{ url_for('main.student_course_activities', course_id=activity.course_id) }}" 
+                       class="btn btn-secondary">返回活动列表</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h3 class="mb-0">活动详情</h3>
+                        <span class="badge 
+                            {% if activity.type == 'poll' %}badge-info
+                            {% elif activity.type == 'quiz' %}badge-primary
+                            {% elif activity.type == 'word_cloud' %}badge-warning
+                            {% elif activity.type == 'short_answer' %}badge-success
+                            {% elif activity.type == 'mini_game' %}badge-danger
+                            {% else %}badge-secondary{% endif %}">
+                            {% if activity.type == 'poll' %}投票调查
+                            {% elif activity.type == 'quiz' %}测验
+                            {% elif activity.type == 'word_cloud' %}词云
+                            {% elif activity.type == 'short_answer' %}简答
+                            {% elif activity.type == 'mini_game' %}小游戏
+                            {% else %}{{ activity.type }}{% endif %}
+                        </span>
+                    </div>
+                    <div class="card-body">
+                        {% if activity.type == 'poll' %}
+                            <!-- 投票调查 -->
+                            <h4>{{ content_data.question or '投票问题' }}</h4>
+                            
+                            {% if user_response %}
+                                <!-- 用户已投票 -->
+                                <div class="alert alert-success">
+                                    <i class="fas fa-check-circle"></i> 您已成功参与此投票！
+                                </div>
+                                {% if content_data.options %}
+                                    <h5>投票选项:</h5>
+                                    {% for option in content_data.options %}
+                                        <div class="form-check mb-2">
+                                            <input class="form-check-input" type="radio" disabled
+                                                   {% if user_response_data and user_response_data.selected_option == option %}checked{% endif %}>
+                                            <label class="form-check-label">
+                                                {{ option }}
+                                                {% if user_response_data and user_response_data.selected_option == option %}
+                                                    <span class="badge badge-primary ml-2">您的选择</span>
+                                                {% endif %}
+                                            </label>
+                                        </div>
+                                    {% endfor %}
+                                {% endif %}
+                            {% else %}
+                                <!-- 用户未投票 -->
+                                {% if content_data.options %}
+                                    <form method="POST" class="mt-4">
+                                        <div class="form-group">
+                                            {% for option in content_data.options %}
+                                                <div class="form-check mb-2">
+                                                    <input class="form-check-input" type="radio" name="poll_option" 
+                                                           id="option{{ loop.index }}" value="{{ option }}" required>
+                                                    <label class="form-check-label" for="option{{ loop.index }}">
+                                                        {{ option }}
+                                                    </label>
+                                                </div>
+                                            {% endfor %}
+                                        </div>
+                                        <button type="submit" class="btn btn-primary">提交投票</button>
+                                    </form>
+                                {% else %}
+                                    <p class="text-muted">暂无投票选项</p>
+                                {% endif %}
+                            {% endif %}
+                            
+                        {% elif activity.type == 'quiz' %}
+                            <!-- 测验 -->
+                            <h4>测验内容</h4>
+                            <p>这是一个测验活动。</p>
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle"></i> 测验功能正在开发中...
+                            </div>
+                            
+                        {% elif activity.type == 'word_cloud' %}
+                            <!-- 词云 -->
+                            <h4>词云活动</h4>
+                            <p>{{ content_data.question or '请输入相关词汇' }}</p>
+                            <form method="POST" action="#" class="mt-4">
+                                <div class="form-group">
+                                    <textarea class="form-control" name="word_input" rows="3" 
+                                              placeholder="请输入您想到的词汇，用逗号分隔..."></textarea>
+                                </div>
+                                <button type="submit" class="btn btn-warning">提交词汇</button>
+                            </form>
+                            
+                        {% elif activity.type == 'short_answer' %}
+                            <!-- 简答题 -->
+                            <h4>{{ content_data.question or '简答题' }}</h4>
+                            <form method="POST" action="#" class="mt-4">
+                                <div class="form-group">
+                                    <textarea class="form-control" name="answer" rows="5" 
+                                              placeholder="请输入您的答案..."></textarea>
+                                </div>
+                                <button type="submit" class="btn btn-success">提交答案</button>
+                            </form>
+                            
+                        {% else %}
+                            <!-- 其他类型或原始JSON数据显示 -->
+                            <h4>活动内容</h4>
+                            <div class="alert alert-light">
+                                <pre>{{ activity.content }}</pre>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">活动信息</h5>
+                    </div>
+                    <div class="card-body">
+                        <p><strong>创建时间:</strong><br>
+                           <small class="text-muted">{{ activity.created_at.strftime('%Y年%m月%d日 %H:%M') }}</small></p>
+                        
+                        <p><strong>状态:</strong><br>
+                           {% if activity.is_active %}
+                               <span class="badge badge-success">进行中</span>
+                           {% else %}
+                               <span class="badge badge-secondary">已结束</span>
+                           {% endif %}
+                        </p>
+                        
+                        <p><strong>创建者:</strong><br>
+                           <small class="text-muted">{{ activity.course.lecturer.username }}</small></p>
+                    </div>
+                </div>
+                
+                <!-- 如果有相关操作的话 -->
+                <div class="card mt-3">
+                    <div class="card-header">
+                        <h5 class="mb-0">相关操作</h5>
+                    </div>
+                    <div class="card-body">
+                        <a href="{{ url_for('main.student_course_activities', course_id=activity.course_id) }}" 
+                           class="btn btn-outline-secondary btn-block">查看所有活动</a>
+                        <a href="{{ url_for('main.student_dashboard') }}" 
+                           class="btn btn-outline-primary btn-block mt-2">返回仪表板</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

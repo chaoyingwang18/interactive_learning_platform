@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h1 class="mb-4">{{ title }}</h1>
+    
+    <div class="alert alert-info" role="alert">
+        排行榜功能正在開發中。未來將根據學生在測驗和活動中的表現進行排名。
+    </div>
+
+    <h2>全校排行榜 (Placeholder)</h2>
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th scope="col">#</th>
+                <th scope="col">學生</th>
+                <th scope="col">總得分</th>
+                <th scope="col">參與活動數</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <th scope="row">1</th>
+                <td>Student A</td>
+                <td>1500</td>
+                <td>15</td>
+            </tr>
+            <tr>
+                <th scope="row">2</th>
+                <td>Student B</td>
+                <td>1450</td>
+                <td>14</td>
+            </tr>
+            <tr>
+                <th scope="row">3</th>
+                <td>Student C</td>
+                <td>1200</td>
+                <td>12</td>
+            </tr>
+        </tbody>
+    </table>
+    
+    <div class="mt-4">
+        <a href="{{ url_for('main.student_dashboard') }}" class="btn btn-secondary">返回儀表板</a>
+    </div>
+{% endblock %}
+

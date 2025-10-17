@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h1 class="mb-4">管理活動 - {{ course.code }} {{ course.name }}</h1>
+
+    <div class="row">
+        <!-- Activity Management Section -->
+        <div class="col-md-8">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h2>活動列表 ({{ activities|length }})</h2>
+                <a href="{{ url_for('main.create_activity', course_id=course.id) }}" class="btn btn-success">
+                    <i class="bi bi-plus-circle"></i> 創建新活動
+                </a>
+            </div>
+
+            {% if activities %}
+            <ul class="list-group mb-4">
+                {% for activity in activities %}
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="mb-1">{{ activity.title }}</h5>
+                        <p class="mb-1"><span class="badge bg-secondary">{{ activity.type }}</span> - 創建於: {{ activity.created_at.strftime('%Y-%m-%d %H:%M') }}</p>
+                    </div>
+                    <div>
+                        {% if activity.is_active %}
+                            <span class="badge bg-success me-2">進行中</span>
+                            <form method="POST" action="{{ url_for('main.toggle_activity_status', activity_id=activity.id, action='stop') }}" style="display: inline;">
+                                <button type="submit" class="btn btn-sm btn-warning">結束</button>
+                            </form>
+                        {% else %}
+                            <span class="badge bg-danger me-2">已結束</span>
+                            <form method="POST" action="{{ url_for('main.toggle_activity_status', activity_id=activity.id, action='start') }}" style="display: inline;">
+                                <button type="submit" class="btn btn-sm btn-primary">開始</button>
+                            </form>
+                        {% endif %}
+                        <a href="{{ url_for('main.activity_report', activity_id=activity.id) }}" class="btn btn-sm btn-info">查看報告</a>
+                    </div>
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <div class="alert alert-info" role="alert">
+                本課程尚未有任何活動。
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Student Management Section (Import) -->
+        <div class="col-md-4">
+            <div class="card p-3 shadow-sm">
+                <h4 class="card-title">學生管理 ({{ course.enrollments.count() }} 人)</h4>
+                <p class="card-text">批量導入學生，格式為 JSON 列表。</p>
+                <form id="import-students-form">
+                    <div class="mb-3">
+                        <textarea class="form-control" id="student-data" rows="6" placeholder='[{"username": "student1", "student_id": "12345678A", "email": "s1@polyu.edu.hk"}, ...]' required></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-secondary w-100">導入學生</button>
+                </form>
+                <div id="import-message" class="mt-3"></div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.getElementById('import-students-form').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const data = document.getElementById('student-data').value;
+        const messageDiv = document.getElementById('import-message');
+        const courseId = {{ course.id }};
+
+        try {
+            JSON.parse(data); // Simple validation
+        } catch (error) {
+            messageDiv.innerHTML = '<div class="alert alert-danger">JSON 格式無效。</div>';
+            return;
+        }
+
+        messageDiv.innerHTML = '<div class="alert alert-warning">正在導入...</div>';
+
+        fetch(`/api/courses/${courseId}/students`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: data,
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                messageDiv.innerHTML = `<div class="alert alert-danger">導入失敗: ${data.error}</div>`;
+            } else {
+                messageDiv.innerHTML = `<div class="alert alert-success">${data.message}</div>`;
+                // Reload the page to update student count and list
+                setTimeout(() => window.location.reload(), 1000);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            messageDiv.innerHTML = '<div class="alert alert-danger">發生網路錯誤。</div>';
+        });
+    });
+</script>
+{% endblock %}
+

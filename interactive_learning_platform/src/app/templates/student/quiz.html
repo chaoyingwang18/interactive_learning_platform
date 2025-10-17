@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <div class="container-fluid">
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h1>{{ activity.title }}</h1>
+                        <p class="text-muted mb-0">
+                            课程: {{ activity.course.code }} - {{ activity.course.name }} | 
+                            教师: {{ activity.course.lecturer.username }}
+                        </p>
+                    </div>
+                    <a href="{{ url_for('main.student_course_activities', course_id=activity.course_id) }}" class="btn btn-secondary">返回活动列表</a>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="mb-0">测验详情</h3>
+                    </div>
+                    <div class="card-body">
+                        {% if quiz_data and quiz_data.questions %}
+                            <form method="POST">
+                                {% for q in quiz_data.questions %}
+                                    <div class="mb-4">
+                                        <h5>题目 {{ loop.index }}: {{ q.question }}</h5>
+                                        {% if q.options %}
+                                            {% for opt in q.options %}
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="radio" name="q{{ loop.index }}" id="q{{ loop.index }}_opt{{ loop.index }}" value="{{ opt }}" {% if user_answer %}disabled{% endif %} {% if user_answer == opt %}checked{% endif %}>
+                                                    <label class="form-check-label" for="q{{ loop.index }}_opt{{ loop.index }}">{{ opt }}
+                                                        {% if user_answer == opt %}<span class="badge badge-primary ml-2">您的选择</span>{% endif %}
+                                                    </label>
+                                                </div>
+                                            {% endfor %}
+                                        {% endif %}
+                                    </div>
+                                {% endfor %}
+                                <button type="submit" class="btn btn-primary" {% if user_answer %}disabled{% endif %}>提交测验</button>
+                            </form>
+                            {% if user_answer %}
+                                <div class="alert alert-success mt-3">您已提交答案，不能再次选择。</div>
+                            {% endif %}
+                        {% else %}
+                            <div class="alert alert-info">暂无测验题目。</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">活动信息</h5>
+                    </div>
+                    <div class="card-body">
+                        <p><strong>创建时间:</strong><br>
+                           <small class="text-muted">{{ activity.created_at.strftime('%Y年%m月%d日 %H:%M') }}</small></p>
+                        <p><strong>状态:</strong><br>
+                           {% if activity.is_active %}
+                               <span class="badge badge-success">进行中</span>
+                           {% else %}
+                               <span class="badge badge-secondary">已结束</span>
+                           {% endif %}
+                        </p>
+                        <p><strong>创建者:</strong><br>
+                           <small class="text-muted">{{ activity.course.lecturer.username }}</small></p>
+                    </div>
+                </div>
+                <div class="card mt-3">
+                    <div class="card-header">
+                        <h5 class="mb-0">相关操作</h5>
+                    </div>
+                    <div class="card-body">
+                        <a href="{{ url_for('main.student_course_activities', course_id=activity.course_id) }}" class="btn btn-outline-secondary btn-block">查看所有活动</a>
+                        <a href="{{ url_for('main.student_dashboard') }}" class="btn btn-outline-primary btn-block mt-2">返回仪表板</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

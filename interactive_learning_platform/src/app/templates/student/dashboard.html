@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h1 class="mb-4">學生儀表板</h1>
+
+    <div class="row">
+        <div class="col-md-8">
+            <h2>我參與的課程</h2>
+            {% if enrollments %}
+            <ul class="list-group mb-4">
+                {% for enrollment in enrollments %}
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="mb-1">{{ enrollment.course.code }} - {{ enrollment.course.name }}</h5>
+                        <p class="mb-1"><small class="text-muted">教師: {{ enrollment.course.lecturer.username }}</small></p>
+                    </div>
+                    <div>
+                        <a href="{{ url_for('main.student_course_activities', course_id=enrollment.course.id) }}" class="btn btn-sm btn-outline-primary">查看活動</a>
+                    </div>
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <div class="alert alert-info" role="alert">
+                您尚未參與任何課程。
+            </div>
+            {% endif %}
+        </div>
+        <div class="col-md-4">
+            <div class="card p-3 shadow-sm">
+                <h4 class="card-title">個人報告</h4>
+                <p class="card-text">查看您的活動參與度、分數和排行榜。</p>
+                <a href="{{ url_for('main.student_leaderboard') }}" class="btn btn-outline-info">查看排行榜</a>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
